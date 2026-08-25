@@ -1,0 +1,18 @@
+# Blocca l'accesso diretto alla cartella /sql (contiene lo schema del database)
+<IfModule mod_alias.c>
+    RedirectMatch 403 ^/actuality/sql/.*$
+</IfModule>
+
+# Impedisce l'esecuzione di script PHP dentro la cartella upload immagini
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<FilesMatch "\.php$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

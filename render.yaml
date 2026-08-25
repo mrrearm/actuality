@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: actuality-blog
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /index.php
+    envVars:
+      - key: DB_DRIVER
+        value: turso
+      - key: BASE_PATH
+        value: ""
+      - key: TURSO_DB_URL
+        sync: false    # da inserire manualmente nel pannello Render (Environment)
+      - key: TURSO_AUTH_TOKEN
+        sync: false    # da inserire manualmente nel pannello Render (Environment)
