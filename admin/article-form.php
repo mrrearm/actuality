@@ -25,7 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($title === '' || $categoryId <= 0 || $content === '') {
         $error = 'Titolo, categoria e contenuto sono obbligatori.';
     } else {
-        // gestione upload immagine (opzionale, ha priorità sull'URL se presente)
         $finalImage = $imageUrlIn ?: 'https://picsum.photos/seed/' . uniqid() . '/900/500';
 
         if (!empty($_FILES['image_file']['name'])) {
@@ -53,7 +52,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: ' . url('admin/dashboard.php?flash=updated'));
                 exit;
             } else {
-                // evita slug duplicati
                 $check = $pdo->prepare('SELECT COUNT(*) FROM articles WHERE slug = ?');
                 $suffix = 1;
                 while (true) {
@@ -70,7 +68,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// valori di default per il form (nuovo o esistente)
 $v = [
     'title'       => $article['title']       ?? ($_POST['title']       ?? ''),
     'category_id' => $article['category_id'] ?? ($_POST['category_id'] ?? ''),
@@ -144,9 +141,54 @@ $v = [
 
       <div class="form-row">
         <label>Contenuto (separa i paragrafi con una riga vuota)</label>
-        <textarea name="content" required><?= h($v['content']) ?></textarea>
-        <div class="hint">Per un link cliccabile scrivi: <code>[testo del link](https://esempio.it)</code></div>
+        <div class="editor-toolbar">
+          <button type="button" onclick="wrapSelection('**','**')" title="Grassetto"><b>B</b></button>
+          <button type="button" onclick="wrapSelection('*','*')" title="Corsivo"><i>I</i></button>
+          <button type="button" onclick="wrapSelection('++','++')" title="Sottolineato"><u>U</u></button>
+          <button type="button" onclick="wrapSelection('~~','~~')" title="Barrato"><s>S</s></button>
+          <button type="button" onclick="insertLink()" title="Inserisci link"><i class="fa-solid fa-link"></i></button>
+          <select onchange="wrapSize(this.value); this.selectedIndex=0;" title="Dimensione testo">
+            <option value="">Dimensione…</option>
+            <option value="piccolo">Piccolo</option>
+            <option value="normale">Normale</option>
+            <option value="grande">Grande</option>
+            <option value="enorme">Enorme</option>
+          </select>
+        </div>
+        <textarea name="content" id="contentField" required><?= h($v['content']) ?></textarea>
+        <div class="hint">Seleziona del testo e usa i pulsanti sopra, oppure scrivi a mano: <code>**grassetto**</code>, <code>*corsivo*</code>, <code>++sottolineato++</code>, <code>~~barrato~~</code>, <code>[testo](https://esempio.it)</code></div>
       </div>
+
+      <script>
+      function getContentField(){ return document.getElementById('contentField'); }
+
+      function wrapSelection(before, after){
+        const ta = getContentField();
+        const start = ta.selectionStart, end = ta.selectionEnd;
+        const selected = ta.value.substring(start, end) || 'testo';
+        ta.setRangeText(before + selected + after, start, end, 'select');
+        ta.focus();
+      }
+
+      function insertLink(){
+        const ta = getContentField();
+        const start = ta.selectionStart, end = ta.selectionEnd;
+        const selected = ta.value.substring(start, end) || 'testo del link';
+        const url = prompt("Indirizzo del link (deve iniziare con https://):", "https://");
+        if (!url) return;
+        ta.setRangeText('[' + selected + '](' + url + ')', start, end, 'select');
+        ta.focus();
+      }
+
+      function wrapSize(size){
+        if (!size) return;
+        const ta = getContentField();
+        const start = ta.selectionStart, end = ta.selectionEnd;
+        const selected = ta.value.substring(start, end) || 'testo';
+        ta.setRangeText('[size=' + size + ']' + selected + '[/size]', start, end, 'select');
+        ta.focus();
+      }
+      </script>
 
       <div style="display:flex; gap:10px;">
         <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> <?= $isEdit ? 'Salva modifiche' : 'Pubblica articolo' ?></button>

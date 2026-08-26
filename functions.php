@@ -68,19 +68,45 @@ function parse_project_link(string $raw): array {
     ];
 }
 
-/** Trasforma il testo con paragrafi separati da riga vuota in HTML sicuro */
+/** Trasforma il testo con paragrafi separati da riga vuota in HTML sicuro.
+ *  Sintassi supportate:
+ *    **grassetto**        -> <strong>
+ *    *corsivo*             -> <em>
+ *    ++sottolineato++      -> <u>
+ *    ~~barrato~~           -> <del>
+ *    [size=grande]testo[/size]  -> dimensione (piccolo|normale|grande|enorme)
+ *    [testo del link](https://...) -> link cliccabile
+ */
 function render_content(string $text): string {
     $paragraphs = preg_split('/\r?\n\r?\n/', trim($text));
     $html = '';
+
+    $sizeMap = [
+        'piccolo' => '0.85em',
+        'normale' => '1em',
+        'grande'  => '1.3em',
+        'enorme'  => '1.6em',
+    ];
+
     foreach ($paragraphs as $p) {
         $p = trim($p);
         if ($p === '') { continue; }
         $safe = nl2br(h($p));
+
+        $safe = preg_replace('/\*\*(.+?)\*\*/s', '<strong>$1</strong>', $safe);
+        $safe = preg_replace('/\*(.+?)\*/s', '<em>$1</em>', $safe);
+        $safe = preg_replace('/\+\+(.+?)\+\+/s', '<u>$1</u>', $safe);
+        $safe = preg_replace('/~~(.+?)~~/s', '<del>$1</del>', $safe);
+        $safe = preg_replace_callback('/\[size=(piccolo|normale|grande|enorme)\](.+?)\[\/size\]/s',
+            function ($m) use ($sizeMap) {
+                return '<span style="font-size:' . $sizeMap[$m[1]] . '">' . $m[2] . '</span>';
+            }, $safe);
         $safe = preg_replace(
-            '/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/',
+            '/\[([^\]]+)\]\s*\((https?:\/\/[^\s)]+)\)/',
             '<a href="$2" target="_blank" rel="noopener">$1</a>',
             $safe
         );
+
         $html .= '<p>' . $safe . '</p>';
     }
     return $html;
