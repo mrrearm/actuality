@@ -75,7 +75,13 @@ function render_content(string $text): string {
     foreach ($paragraphs as $p) {
         $p = trim($p);
         if ($p === '') { continue; }
-        $html .= '<p>' . nl2br(h($p)) . '</p>';
+        $safe = nl2br(h($p));
+        $safe = preg_replace(
+            '/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/',
+            '<a href="$2" target="_blank" rel="noopener">$1</a>',
+            $safe
+        );
+        $html .= '<p>' . $safe . '</p>';
     }
     return $html;
 }

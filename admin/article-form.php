@@ -145,6 +145,7 @@ $v = [
       <div class="form-row">
         <label>Contenuto (separa i paragrafi con una riga vuota)</label>
         <textarea name="content" required><?= h($v['content']) ?></textarea>
+        <div class="hint">Per un link cliccabile scrivi: <code>[testo del link](https://esempio.it)</code></div>
       </div>
 
       <div style="display:flex; gap:10px;">
