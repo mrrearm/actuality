@@ -10,7 +10,10 @@ function filterCategory(cat){
     pills.forEach(p => p.style.opacity = '1');
   } else {
     activeCat = cat;
-    cards.forEach(c => c.style.display = (c.dataset.cat === cat) ? '' : 'none');
+    cards.forEach(c => {
+      const cats = (c.dataset.cat || '').split(' ');
+      c.style.display = cats.includes(cat) ? '' : 'none';
+    });
     pills.forEach(p => p.style.opacity = (p.dataset.cat === cat) ? '1' : '.45');
   }
   const grid = document.getElementById('grid');

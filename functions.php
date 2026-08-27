@@ -22,12 +22,97 @@ function get_articles($pdo, ?string $catSlug = null, bool $onlyPublished = true)
     $where = [];
     $params = [];
     if ($onlyPublished) { $where[] = "a.status = 'published'"; }
-    if ($catSlug) { $where[] = 'c.slug = ?'; $params[] = $catSlug; }
+    if ($catSlug) {
+        // Filtra su QUALSIASI categoria associata all'articolo, non solo quella principale
+        $where[] = 'a.id IN (SELECT ac.article_id FROM article_categories ac JOIN categories c2 ON ac.category_id = c2.id WHERE c2.slug = ?)';
+        $params[] = $catSlug;
+    }
     if ($where) { $sql .= ' WHERE ' . implode(' AND ', $where); }
     $sql .= ' ORDER BY a.published_at DESC, a.id DESC';
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     return $stmt->fetchAll();
+}
+
+/** Tutte le categorie associate a un gruppo di articoli, in UNA sola query (evita N query separate) */
+function get_categories_for_articles($pdo, array $articleIds): array {
+    if (!$articleIds) { return []; }
+    $placeholders = implode(',', array_fill(0, count($articleIds), '?'));
+    $stmt = $pdo->prepare("SELECT ac.article_id, c.id, c.slug, c.name, c.color_hex, c.icon_class
+                            FROM article_categories ac
+                            JOIN categories c ON ac.category_id = c.id
+                            WHERE ac.article_id IN ($placeholders)
+                            ORDER BY c.sort_order ASC");
+    $stmt->execute($articleIds);
+    $map = [];
+    foreach ($stmt->fetchAll() as $row) {
+        $map[(int)$row['article_id']][] = $row;
+    }
+    return $map;
+}
+
+function get_article_categories($pdo, int $articleId): array {
+    $map = get_categories_for_articles($pdo, [$articleId]);
+    return $map[$articleId] ?? [];
+}
+
+/** Sostituisce l'intero insieme di categorie di un articolo con quello passato */
+function sync_article_categories($pdo, int $articleId, array $categoryIds): void {
+    $pdo->prepare('DELETE FROM article_categories WHERE article_id = ?')->execute([$articleId]);
+    $stmt = $pdo->prepare('INSERT INTO article_categories (article_id, category_id) VALUES (?, ?)');
+    foreach (array_unique($categoryIds) as $catId) {
+        if ($catId > 0) {
+            $stmt->execute([$articleId, $catId]);
+        }
+    }
+}
+
+/** Statistiche voti (media + conteggio) per un gruppo di articoli, in UNA sola query */
+function get_ratings_for_articles($pdo, array $articleIds): array {
+    if (!$articleIds) { return []; }
+    $placeholders = implode(',', array_fill(0, count($articleIds), '?'));
+    $stmt = $pdo->prepare("SELECT article_id, COUNT(*) AS cnt, AVG(rating) AS avg
+                            FROM ratings WHERE article_id IN ($placeholders) GROUP BY article_id");
+    $stmt->execute($articleIds);
+    $map = [];
+    foreach ($stmt->fetchAll() as $row) {
+        $map[(int)$row['article_id']] = [
+            'count'   => (int)$row['cnt'],
+            'average' => round((float)$row['avg'], 1),
+        ];
+    }
+    return $map;
+}
+
+function get_rating_stats($pdo, int $articleId): array {
+    $map = get_ratings_for_articles($pdo, [$articleId]);
+    return $map[$articleId] ?? ['count' => 0, 'average' => 0.0];
+}
+
+/** Stelle in sola visualizzazione (non interattive), es. per le card della griglia */
+function render_stars_display(float $average, int $max = 5): string {
+    $html = '<span class="stars-display" aria-label="valutazione ' . $average . ' su ' . $max . '">';
+    for ($i = 1; $i <= $max; $i++) {
+        $html .= ($i <= round($average)) ? '★' : '☆';
+    }
+    $html .= '</span>';
+    return $html;
+}
+
+function get_comments($pdo, int $articleId, bool $onlyApproved = true): array {
+    $sql = 'SELECT * FROM comments WHERE article_id = ?';
+    $params = [$articleId];
+    if ($onlyApproved) { $sql .= " AND status = 'approved'"; }
+    $sql .= ' ORDER BY created_at ASC';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll();
+}
+
+function count_comments_by_status($pdo, string $status): int {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM comments WHERE status = ?");
+    $stmt->execute([$status]);
+    return (int)$stmt->fetchColumn();
 }
 
 function get_article($pdo, int $id): ?array {
@@ -68,6 +153,7 @@ function parse_project_link(string $raw): array {
     ];
 }
 
+/** Trasforma il testo con paragrafi separati da riga vuota in HTML sicuro */
 /** Trasforma il testo con paragrafi separati da riga vuota in HTML sicuro.
  *  Sintassi supportate:
  *    **grassetto**        -> <strong>
@@ -93,14 +179,20 @@ function render_content(string $text): string {
         if ($p === '') { continue; }
         $safe = nl2br(h($p));
 
+        // Grassetto (va prima del corsivo, altrimenti ** verrebbe letto come due *)
         $safe = preg_replace('/\*\*(.+?)\*\*/s', '<strong>$1</strong>', $safe);
+        // Corsivo
         $safe = preg_replace('/\*(.+?)\*/s', '<em>$1</em>', $safe);
+        // Sottolineato
         $safe = preg_replace('/\+\+(.+?)\+\+/s', '<u>$1</u>', $safe);
+        // Barrato
         $safe = preg_replace('/~~(.+?)~~/s', '<del>$1</del>', $safe);
+        // Dimensione testo (solo valori dalla lista sopra, nessun CSS libero dell'utente)
         $safe = preg_replace_callback('/\[size=(piccolo|normale|grande|enorme)\](.+?)\[\/size\]/s',
             function ($m) use ($sizeMap) {
                 return '<span style="font-size:' . $sizeMap[$m[1]] . '">' . $m[2] . '</span>';
             }, $safe);
+        // Link (tollerante a uno spazio tra ] e ()
         $safe = preg_replace(
             '/\[([^\]]+)\]\s*\((https?:\/\/[^\s)]+)\)/',
             '<a href="$2" target="_blank" rel="noopener">$1</a>',

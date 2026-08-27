@@ -50,6 +50,32 @@ CREATE TABLE IF NOT EXISTS subscribers (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Categorie multiple per articolo (many-to-many). articles.category_id resta
+-- la "categoria principale" (colore/icona sulla card), questa tabella è la
+-- lista completa (inclusa la principale) usata per i filtri e i chip.
+CREATE TABLE IF NOT EXISTS article_categories (
+  article_id INTEGER NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
+  category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+  PRIMARY KEY (article_id, category_id)
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  article_id INTEGER NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
+  author_name TEXT NOT NULL,
+  author_email TEXT,
+  body TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ratings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  article_id INTEGER NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
+  rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS settings (
   setting_key TEXT PRIMARY KEY,
   setting_value TEXT
@@ -214,3 +240,10 @@ Selezioniamo i titoli più interessanti del momento, tra opere prime sorprendent
 
 Consigli pensati per chi cerca al cinema qualcosa di diverso dal solito intrattenimento mainstream.',
  'https://picsum.photos/seed/spettacolo4/900/500');
+
+-- ------------------------------------------------------------
+-- Popola la tabella delle categorie multiple con la categoria
+-- principale già assegnata ad ogni articolo (installazione nuova)
+-- ------------------------------------------------------------
+INSERT INTO article_categories (article_id, category_id)
+SELECT id, category_id FROM articles;

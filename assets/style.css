@@ -52,7 +52,10 @@ img{display:block; width:100%; height:100%; object-fit:cover;}
   font-size:11px; padding:3px 9px; border-radius:6px; backdrop-filter:blur(3px); line-height:1.4;
 }
 .card-body{padding:12px 13px 14px; display:flex; flex-direction:column; gap:5px; flex:1;}
+.card-tags{display:flex; flex-wrap:wrap; gap:4px 8px;}
 .card-tag{display:flex; align-items:center; gap:5px; font-size:9.5px; font-weight:700; letter-spacing:.3px; text-transform:uppercase; overflow-wrap:break-word;}
+.card-rating{font-size:11px; color:#e0a52c; display:flex; align-items:center; gap:5px;}
+.card-rating span{color:var(--ink-soft); font-weight:600;}
 .card-tag i{font-size:9px;}
 .card h3{font-size:12.5px; line-height:1.32; font-weight:700; color:var(--ink); overflow-wrap:break-word; word-break:break-word; hyphens:auto;}
 .card .read-more{margin-top:auto; font-size:10px; font-weight:700; display:inline-flex; align-items:center; gap:4px;}
@@ -79,7 +82,58 @@ img{display:block; width:100%; height:100%; object-fit:cover;}
 .article-page{max-width:760px; margin:0 auto; padding:40px 24px 70px;}
 .article-back{display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--ink-soft); margin-bottom:20px;}
 .article-media{border-radius:18px; overflow:hidden; aspect-ratio:16/8; margin-bottom:24px;}
-.article-tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; margin-bottom:10px; display:inline-block;}
+.article-tags{display:flex; flex-wrap:wrap; gap:8px 14px; margin-bottom:14px;}
+.article-tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-flex; align-items:center; gap:6px;}
+
+/* CONDIVISIONE SOCIAL */
+.share-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:34px 0; padding-top:22px; border-top:1px solid var(--line);}
+.share-label{font-size:13px; font-weight:700; color:var(--ink-soft); margin-right:2px;}
+.share-row a, .share-copy{
+  width:38px; height:38px; border-radius:50%; background:var(--paper); border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; font-size:15px; color:var(--ink);
+  cursor:pointer; transition:background .2s, transform .2s;
+}
+.share-row a:hover, .share-copy:hover{ background:#eef0f3; transform:translateY(-2px); }
+
+/* VOTO A STELLE */
+.rating-box{ background:#fbfbfc; border:1px solid var(--line); border-radius:14px; padding:22px 24px; margin-bottom:34px; text-align:center;}
+.rating-box h3{ font-size:15px; margin-bottom:14px; color:var(--ink); }
+.star-rating{ display:inline-flex; flex-direction:row-reverse; gap:4px; font-size:32px; }
+.star-rating input{ display:none; }
+.star-rating label{ color:#d8dce2; cursor:pointer; transition:color .15s; line-height:1; }
+.star-rating input:checked ~ label,
+.star-rating label:hover,
+.star-rating label:hover ~ label{ color:#e0a52c; }
+.rating-result, .rating-result-small{ margin-top:10px; font-size:13.5px; color:var(--ink-soft); display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; }
+.stars-display{ color:#e0a52c; letter-spacing:2px; }
+
+/* COMMENTI */
+.comments-section{ margin-top:10px; }
+.comments-section h3{ font-size:18px; margin-bottom:18px; }
+.comment{ padding:16px 0; border-bottom:1px solid var(--line); }
+.comment-author{ font-weight:700; font-size:13.5px; color:var(--ink); }
+.comment-date{ font-weight:400; color:var(--ink-soft); font-size:12px; margin-left:6px; }
+.comment p{ margin-top:6px; font-size:14px; line-height:1.65; color:var(--ink-soft); }
+.no-comments{ color:var(--ink-soft); font-size:14px; padding:10px 0 20px; }
+
+.comment-form-box{ margin-top:26px; background:#fbfbfc; border:1px solid var(--line); border-radius:14px; padding:22px 24px; }
+.comment-form-box h4{ font-size:15px; margin-bottom:14px; }
+.comment-form-row{ display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+.comment-form-row input{ flex:1; min-width:160px; }
+.comment-form-box input, .comment-form-box textarea{
+  width:100%; padding:11px 13px; border:1px solid var(--line); border-radius:8px; font-size:13.5px;
+  font-family:inherit; background:#fff;
+}
+.comment-form-box textarea{ min-height:100px; resize:vertical; margin-bottom:14px; }
+.btn-comment-submit{
+  background:#1f8a94; color:#fff; border:none; padding:11px 22px; border-radius:8px;
+  font-weight:700; font-size:13px; cursor:pointer;
+}
+.btn-comment-submit:hover{ background:#1a747d; }
+.comment-flash{ padding:10px 14px; border-radius:8px; font-size:13px; margin-bottom:14px; }
+.comment-flash.ok{ background:#e9f8ee; color:#2c7a45; }
+.comment-flash.error{ background:#fdecec; color:#c0392b; }
+.hp-field{ position:absolute; left:-9999px; opacity:0; height:0; overflow:hidden; }
 .article-page h1{font-size:clamp(24px,4vw,34px); line-height:1.3; margin-bottom:18px; color:var(--ink);}
 .article-page p{font-size:15.5px; line-height:1.8; color:var(--ink-soft); margin-bottom:14px;}
 

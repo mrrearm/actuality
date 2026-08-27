@@ -40,6 +40,36 @@ CREATE TABLE IF NOT EXISTS subscribers (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Categorie multiple per articolo (many-to-many). articles.category_id resta
+-- la "categoria principale" (colore/icona sulla card), questa tabella è la
+-- lista completa (inclusa la principale) usata per i filtri e i chip.
+CREATE TABLE IF NOT EXISTS article_categories (
+  article_id INT NOT NULL,
+  category_id INT NOT NULL,
+  PRIMARY KEY (article_id, category_id),
+  FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE,
+  FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS comments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  article_id INT NOT NULL,
+  author_name VARCHAR(100) NOT NULL,
+  author_email VARCHAR(190) DEFAULT NULL,
+  body TEXT NOT NULL,
+  status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS ratings (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  article_id INT NOT NULL,
+  rating TINYINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS settings (
   setting_key VARCHAR(60) PRIMARY KEY,
   setting_value TEXT
@@ -141,3 +171,10 @@ INSERT INTO articles (category_id, title, slug, excerpt, content, image_url) VAL
 (4,'Cinema d''autore: consigli e recensioni','cinema-dautore-consigli-e-recensioni','I titoli più interessanti lontano dai grandi blockbuster.',
  'Lontano dai grandi blockbuster, il cinema d''autore continua a offrire storie originali e sguardi registici fuori dagli schemi.\n\nSelezioniamo i titoli più interessanti del momento, tra opere prime sorprendenti e ritorni di registi affermati.\n\nConsigli pensati per chi cerca al cinema qualcosa di diverso dal solito intrattenimento mainstream.',
  'https://picsum.photos/seed/spettacolo4/900/500');
+
+-- ------------------------------------------------------------
+-- Popola la tabella delle categorie multiple con la categoria
+-- principale già assegnata ad ogni articolo (installazione nuova)
+-- ------------------------------------------------------------
+INSERT INTO article_categories (article_id, category_id)
+SELECT id, category_id FROM articles;

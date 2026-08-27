@@ -17,14 +17,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $title       = trim($_POST['title'] ?? '');
     $categoryId  = (int)($_POST['category_id'] ?? 0);
+    $extraCategoryIds = array_map('intval', $_POST['extra_categories'] ?? []);
     $excerpt     = trim($_POST['excerpt'] ?? '');
     $content     = trim($_POST['content'] ?? '');
     $status      = ($_POST['status'] ?? 'published') === 'draft' ? 'draft' : 'published';
     $imageUrlIn  = trim($_POST['image_url'] ?? '');
 
     if ($title === '' || $categoryId <= 0 || $content === '') {
-        $error = 'Titolo, categoria e contenuto sono obbligatori.';
+        $error = 'Titolo, categoria principale e contenuto sono obbligatori.';
     } else {
+        // gestione upload immagine (opzionale, ha priorità sull'URL se presente)
         $finalImage = $imageUrlIn ?: 'https://picsum.photos/seed/' . uniqid() . '/900/500';
 
         if (!empty($_FILES['image_file']['name'])) {
@@ -45,13 +47,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$error) {
             $slugBase = slugify($title);
             $slug = $slugBase;
+            // L'insieme completo delle categorie è sempre: principale + eventuali aggiuntive selezionate
+            $allCategoryIds = array_unique(array_merge([$categoryId], $extraCategoryIds));
 
             if ($isEdit) {
                 $stmt = $pdo->prepare('UPDATE articles SET category_id=?, title=?, slug=?, excerpt=?, content=?, image_url=?, status=? WHERE id=?');
                 $stmt->execute([$categoryId, $title, $slug, $excerpt, $content, $finalImage, $status, $id]);
+                sync_article_categories($pdo, $id, $allCategoryIds);
                 header('Location: ' . url('admin/dashboard.php?flash=updated'));
                 exit;
             } else {
+                // evita slug duplicati
                 $check = $pdo->prepare('SELECT COUNT(*) FROM articles WHERE slug = ?');
                 $suffix = 1;
                 while (true) {
@@ -61,6 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $stmt = $pdo->prepare('INSERT INTO articles (category_id, title, slug, excerpt, content, image_url, status) VALUES (?,?,?,?,?,?,?)');
                 $stmt->execute([$categoryId, $title, $slug, $excerpt, $content, $finalImage, $status]);
+                $newId = (int)$pdo->lastInsertId();
+                sync_article_categories($pdo, $newId, $allCategoryIds);
                 header('Location: ' . url('admin/dashboard.php?flash=created'));
                 exit;
             }
@@ -68,6 +76,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Categorie aggiuntive già assegnate all'articolo (per pre-selezionare le checkbox in modifica)
+$currentCategoryIds = $isEdit ? array_column(get_article_categories($pdo, $id), 'id') : [];
+
+// valori di default per il form (nuovo o esistente)
 $v = [
     'title'       => $article['title']       ?? ($_POST['title']       ?? ''),
     'category_id' => $article['category_id'] ?? ($_POST['category_id'] ?? ''),
@@ -106,7 +118,7 @@ $v = [
 
       <div class="form-grid">
         <div class="form-row">
-          <label>Categoria</label>
+          <label>Categoria principale (colore/icona sulla card)</label>
           <select name="category_id" required>
             <option value="">— scegli —</option>
             <?php foreach ($categories as $cat): ?>
@@ -121,6 +133,20 @@ $v = [
             <option value="draft" <?= $v['status'] === 'draft' ? 'selected' : '' ?>>Bozza</option>
           </select>
         </div>
+      </div>
+
+      <div class="form-row">
+        <label>Altre categorie (l'articolo comparirà anche filtrando per queste)</label>
+        <div class="checkbox-group">
+          <?php foreach ($categories as $cat): ?>
+            <label class="checkbox-chip">
+              <input type="checkbox" name="extra_categories[]" value="<?= (int)$cat['id'] ?>"
+                <?= in_array((int)$cat['id'], $currentCategoryIds, true) ? 'checked' : '' ?>>
+              <?= h($cat['name']) ?>
+            </label>
+          <?php endforeach; ?>
+        </div>
+        <div class="hint">La categoria principale scelta sopra viene sempre inclusa automaticamente, anche se non la spunti qui.</div>
       </div>
 
       <div class="form-row">
