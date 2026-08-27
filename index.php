@@ -2,14 +2,29 @@
 require __DIR__ . '/config.php';
 require __DIR__ . '/functions.php';
 
+const ARTICLES_PER_PAGE = 16;
+
 $catSlug = $_GET['cat'] ?? null;
-$articles = get_articles($pdo, $catSlug, true);
+
+$totalArticles = count_articles($pdo, $catSlug, true);
+$totalPages = max(1, (int)ceil($totalArticles / ARTICLES_PER_PAGE));
+$page = max(1, min($totalPages, (int)($_GET['page'] ?? 1)));
+$offset = ($page - 1) * ARTICLES_PER_PAGE;
+
+$articles = get_articles($pdo, $catSlug, true, ARTICLES_PER_PAGE, $offset);
 $pageTitle = get_setting($pdo, 'site_title', 'Scopri. Racconta. Sogna.');
 
 // Query in blocco (una sola chiamata) invece che una per articolo: importante soprattutto con Turso
 $articleIds = array_column($articles, 'id');
 $categoriesMap = get_categories_for_articles($pdo, $articleIds);
 $ratingsMap = get_ratings_for_articles($pdo, $articleIds);
+
+/** Costruisce l'URL di una pagina mantenendo l'eventuale filtro categoria attivo */
+function page_url(int $p, ?string $catSlug): string {
+    $params = ['page' => $p];
+    if ($catSlug) { $params['cat'] = $catSlug; }
+    return url('index.php?' . http_build_query($params)) . '#grid';
+}
 
 require __DIR__ . '/partials/header.php';
 ?>
@@ -47,6 +62,22 @@ require __DIR__ . '/partials/header.php';
       </article>
     <?php endforeach; ?>
   </main>
+
+  <?php if ($totalPages > 1): ?>
+    <nav class="pagination">
+      <?php if ($page > 1): ?>
+        <a href="<?= page_url($page - 1, $catSlug) ?>" class="page-link page-nav"><i class="fa-solid fa-chevron-left"></i> Precedenti</a>
+      <?php endif; ?>
+
+      <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+        <a href="<?= page_url($p, $catSlug) ?>" class="page-link <?= $p === $page ? 'active' : '' ?>"><?= $p ?></a>
+      <?php endfor; ?>
+
+      <?php if ($page < $totalPages): ?>
+        <a href="<?= page_url($page + 1, $catSlug) ?>" class="page-link page-nav">Successivi <i class="fa-solid fa-chevron-right"></i></a>
+      <?php endif; ?>
+    </nav>
+  <?php endif; ?>
 </div>
 
 <?php require __DIR__ . '/partials/footer.php'; ?>

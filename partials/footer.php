@@ -98,7 +98,7 @@ $subError   = isset($_GET['sub_error']);
       <?php endforeach; ?>
     </div>
 
-    <div class="f-bottom">&copy; <?= date('Y') ?> <?= h(get_setting($pdo, 'site_title', 'Scopri. Racconta. Sogna.')) ?> — Tutti i diritti riservati</div>
+    <div class="f-bottom">&copy; <?= date('Y') ?> <?= h(get_setting($pdo, 'site_title', 'Scopri. Racconta. Sogna.')) ?> — Tutti i diritti riservati &nbsp;·&nbsp; <a href="<?= url('admin/login.php') ?>" style="color:#7c8ba0">Area Riservata</a></div>
   </div>
 </footer>
 

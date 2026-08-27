@@ -16,7 +16,7 @@ function get_category_by_slug($pdo, string $slug): ?array {
     return $row ?: null;
 }
 
-function get_articles($pdo, ?string $catSlug = null, bool $onlyPublished = true): array {
+function get_articles($pdo, ?string $catSlug = null, bool $onlyPublished = true, ?int $limit = null, ?int $offset = null): array {
     $sql = 'SELECT a.*, c.slug AS cat_slug, c.name AS cat_name, c.color_hex, c.icon_class
             FROM articles a JOIN categories c ON a.category_id = c.id';
     $where = [];
@@ -29,9 +29,31 @@ function get_articles($pdo, ?string $catSlug = null, bool $onlyPublished = true)
     }
     if ($where) { $sql .= ' WHERE ' . implode(' AND ', $where); }
     $sql .= ' ORDER BY a.published_at DESC, a.id DESC';
+    if ($limit !== null) {
+        $sql .= ' LIMIT ' . (int)$limit;
+        if ($offset !== null) {
+            $sql .= ' OFFSET ' . (int)$offset;
+        }
+    }
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     return $stmt->fetchAll();
+}
+
+/** Conta gli articoli totali (per calcolare quante pagine servono) */
+function count_articles($pdo, ?string $catSlug = null, bool $onlyPublished = true): int {
+    $sql = 'SELECT COUNT(*) FROM articles a';
+    $where = [];
+    $params = [];
+    if ($onlyPublished) { $where[] = "a.status = 'published'"; }
+    if ($catSlug) {
+        $where[] = 'a.id IN (SELECT ac.article_id FROM article_categories ac JOIN categories c2 ON ac.category_id = c2.id WHERE c2.slug = ?)';
+        $params[] = $catSlug;
+    }
+    if ($where) { $sql .= ' WHERE ' . implode(' AND ', $where); }
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    return (int)$stmt->fetchColumn();
 }
 
 /** Tutte le categorie associate a un gruppo di articoli, in UNA sola query (evita N query separate) */

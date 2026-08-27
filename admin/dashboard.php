@@ -8,6 +8,7 @@ $activePage = 'dashboard';
 // filtro per categoria opzionale
 $catSlug = $_GET['cat'] ?? null;
 $allArticles = get_articles($pdo, $catSlug, false); // false = include anche le bozze
+$categoriesMap = get_categories_for_articles($pdo, array_column($allArticles, 'id'));
 
 $totalPublished = $pdo->query("SELECT COUNT(*) FROM articles WHERE status='published'")->fetchColumn();
 $totalDraft     = $pdo->query("SELECT COUNT(*) FROM articles WHERE status='draft'")->fetchColumn();
@@ -65,11 +66,18 @@ $flash = $_GET['flash'] ?? '';
         <?php if (!$allArticles): ?>
           <tr><td colspan="6" style="text-align:center; color:var(--ink-soft); padding:24px;">Nessun articolo trovato.</td></tr>
         <?php endif; ?>
-        <?php foreach ($allArticles as $art): ?>
+        <?php foreach ($allArticles as $art):
+          $artCats = $categoriesMap[(int)$art['id']] ?? [];
+        ?>
           <tr>
             <td><img src="<?= h($art['image_url']) ?>" alt=""></td>
             <td><?= h($art['title']) ?></td>
-            <td><span class="color-swatch" style="background:<?= h($art['color_hex']) ?>"></span><?= h($art['cat_name']) ?></td>
+            <td>
+              <?php foreach ($artCats as $c): ?>
+                <span class="color-swatch" style="background:<?= h($c['color_hex']) ?>" title="<?= h($c['name']) ?>"></span>
+              <?php endforeach; ?>
+              <?= h(implode(', ', array_column($artCats, 'name'))) ?>
+            </td>
             <td><span class="badge <?= $art['status'] === 'draft' ? 'draft' : '' ?>" style="background:<?= $art['status'] === 'draft' ? '' : '#4c9a6a' ?>"><?= $art['status'] === 'draft' ? 'Bozza' : 'Pubblicato' ?></span></td>
             <td><?= date('d/m/Y', strtotime($art['published_at'])) ?></td>
             <td style="white-space:nowrap;">
