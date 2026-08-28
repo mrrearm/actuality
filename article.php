@@ -2,8 +2,16 @@
 require __DIR__ . '/config.php';
 require __DIR__ . '/functions.php';
 
-$id = (int)($_GET['id'] ?? 0);
-$article = $id ? get_article($pdo, $id) : null;
+$slugParam = $_GET['slug'] ?? null;
+$idParam = (int)($_GET['id'] ?? 0);
+
+if ($slugParam) {
+    $article = get_article_by_slug($pdo, $slugParam);
+} elseif ($idParam) {
+    $article = get_article($pdo, $idParam);
+} else {
+    $article = null;
+}
 
 if (!$article || $article['status'] !== 'published') {
     http_response_code(404);
@@ -13,6 +21,8 @@ if (!$article || $article['status'] !== 'published') {
     require __DIR__ . '/partials/footer.php';
     exit;
 }
+
+$id = (int)$article['id'];
 
 $pageTitle = $article['title'] . ' — ' . get_setting($pdo, 'site_title', '');
 $articleCategories = get_article_categories($pdo, $id);
@@ -24,7 +34,7 @@ $hasVoted = isset($_COOKIE['voted_articles']) && in_array((string)$id, explode('
 $forwardedProto = strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '');
 $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $forwardedProto === 'https';
 $scheme = $isHttps ? 'https' : 'http';
-$currentUrl = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? '') . url('article.php?id=' . $id);
+$currentUrl = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? '') . article_url($article);
 $shareTitle = rawurlencode($article['title']);
 $shareUrl = rawurlencode($currentUrl);
 

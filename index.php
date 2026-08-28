@@ -42,7 +42,7 @@ require __DIR__ . '/partials/header.php';
       $slugs = implode(' ', array_column($artCats, 'slug'));
       $rating = $ratingsMap[(int)$art['id']] ?? ['count' => 0, 'average' => 0.0];
     ?>
-      <article class="card" data-cat="<?= h($slugs) ?>" onclick="window.location.href='<?= url('article.php?id=' . (int)$art['id']) ?>'">
+      <article class="card" data-cat="<?= h($slugs) ?>" onclick="window.location.href='<?= article_url($art) ?>'">
         <div class="card-media">
           <span class="card-badge"><?= str_pad($i + 1, 2, '0', STR_PAD_LEFT) ?></span>
           <img src="<?= h($art['image_url']) ?>" alt="<?= h($art['title']) ?>">

@@ -146,6 +146,15 @@ function get_article($pdo, int $id): ?array {
     return $row ?: null;
 }
 
+function get_article_by_slug($pdo, string $slug): ?array {
+    $stmt = $pdo->prepare('SELECT a.*, c.slug AS cat_slug, c.name AS cat_name, c.color_hex, c.icon_class
+                            FROM articles a JOIN categories c ON a.category_id = c.id
+                            WHERE a.slug = ?');
+    $stmt->execute([$slug]);
+    $row = $stmt->fetch();
+    return $row ?: null;
+}
+
 function get_setting($pdo, string $key, string $default = ''): string {
     static $cache = null;
     if ($cache === null) {
@@ -233,6 +242,25 @@ function slugify(string $text): string {
     $text = strtolower($text);
     $text = preg_replace('~[^-a-z0-9]+~', '', $text);
     return $text ?: 'articolo';
+}
+
+/** Slug leggibile in stile Wikipedia: mantiene maiuscole, parentesi e accenti,
+ *  sostituisce solo gli spazi con underscore. Usato per gli URL degli articoli
+ *  (es. "Disclosure Day (2026) - Non siamo soli" -> "Disclosure_Day_(2026)_-_Non_siamo_soli") */
+function title_to_url_slug(string $title): string {
+    $slug = trim($title);
+    // rimuove i caratteri che avrebbero un significato speciale in una URL
+    $slug = str_replace(['/', '\\', '?', '#', '%', '&', '=', '+', '"', "'", '<', '>'], '', $slug);
+    // normalizza spazi multipli/tab in un unico underscore
+    $slug = preg_replace('/\s+/u', '_', $slug);
+    $slug = trim($slug, '_');
+    return $slug !== '' ? $slug : 'articolo';
+}
+
+/** URL pubblico di un articolo: usa lo slug leggibile se presente, altrimenti ripiega su ?id= */
+function article_url(array $article): string {
+    $slug = $article['slug'] ?? '';
+    return $slug !== '' ? url($slug) : url('article.php?id=' . (int)$article['id']);
 }
 
 function is_logged_in(): bool {

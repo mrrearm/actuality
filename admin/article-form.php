@@ -45,25 +45,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (!$error) {
-            $slugBase = slugify($title);
-            $slug = $slugBase;
             // L'insieme completo delle categorie è sempre: principale + eventuali aggiuntive selezionate
             $allCategoryIds = array_unique(array_merge([$categoryId], $extraCategoryIds));
 
             if ($isEdit) {
-                $stmt = $pdo->prepare('UPDATE articles SET category_id=?, title=?, slug=?, excerpt=?, content=?, image_url=?, status=? WHERE id=?');
-                $stmt->execute([$categoryId, $title, $slug, $excerpt, $content, $finalImage, $status, $id]);
+                // Lo slug NON viene rigenerato in modifica: l'URL pubblico già condiviso resta stabile
+                $stmt = $pdo->prepare('UPDATE articles SET category_id=?, title=?, excerpt=?, content=?, image_url=?, status=? WHERE id=?');
+                $stmt->execute([$categoryId, $title, $excerpt, $content, $finalImage, $status, $id]);
                 sync_article_categories($pdo, $id, $allCategoryIds);
                 header('Location: ' . url('admin/dashboard.php?flash=updated'));
                 exit;
             } else {
-                // evita slug duplicati
+                // Slug leggibile in stile Wikipedia, con controllo duplicati
+                $slugBase = title_to_url_slug($title);
+                $slug = $slugBase;
                 $check = $pdo->prepare('SELECT COUNT(*) FROM articles WHERE slug = ?');
                 $suffix = 1;
                 while (true) {
                     $check->execute([$slug]);
                     if ((int)$check->fetchColumn() === 0) break;
-                    $slug = $slugBase . '-' . (++$suffix);
+                    $slug = $slugBase . '_' . (++$suffix);
                 }
                 $stmt = $pdo->prepare('INSERT INTO articles (category_id, title, slug, excerpt, content, image_url, status) VALUES (?,?,?,?,?,?,?)');
                 $stmt->execute([$categoryId, $title, $slug, $excerpt, $content, $finalImage, $status]);
@@ -114,6 +115,11 @@ $v = [
       <div class="form-row">
         <label>Titolo</label>
         <input type="text" name="title" value="<?= h($v['title']) ?>" required>
+        <?php if ($isEdit): ?>
+          <div class="hint">URL pubblico (stabile, non cambia modificando il titolo): <code><?= h(article_url($article)) ?></code></div>
+        <?php else: ?>
+          <div class="hint">L'URL pubblico verrà generato automaticamente dal titolo al momento della pubblicazione.</div>
+        <?php endif; ?>
       </div>
 
       <div class="form-grid">

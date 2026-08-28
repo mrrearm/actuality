@@ -25,7 +25,7 @@ if (!in_array($filter, ['pending', 'approved', 'rejected', 'all'], true)) {
     $filter = 'pending';
 }
 
-$sql = 'SELECT cm.*, a.title AS article_title, a.id AS article_id
+$sql = 'SELECT cm.*, a.title AS article_title, a.id AS article_id, a.slug AS article_slug
         FROM comments cm JOIN articles a ON cm.article_id = a.id';
 $params = [];
 if ($filter !== 'all') {
@@ -86,7 +86,7 @@ $counts = [
             <strong><?= h($c['author_name']) ?></strong>
             <?php if ($c['author_email']): ?><span style="color:var(--ink-soft); font-size:12px;"> — <?= h($c['author_email']) ?></span><?php endif; ?>
             <div style="font-size:12px; color:var(--ink-soft); margin-top:2px;">
-              su <a href="<?= url('article.php?id=' . (int)$c['article_id']) ?>" target="_blank"><?= h($c['article_title']) ?></a>
+              su <a href="<?= article_url(['id' => $c['article_id'], 'slug' => $c['article_slug']]) ?>" target="_blank"><?= h($c['article_title']) ?></a>
               · <?= date('d/m/Y H:i', strtotime($c['created_at'])) ?>
               · <span class="badge <?= $c['status'] !== 'approved' ? 'draft' : '' ?>" style="background:<?= $c['status']==='approved' ? '#4c9a6a' : ($c['status']==='rejected' ? '#e15656' : '') ?>"><?= ucfirst($c['status']) ?></span>
             </div>

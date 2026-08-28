@@ -206,6 +206,49 @@ dallo scopo di un deploy Render puro.
   sottodominio custom (`actuality.mrrearm.it`) ottiene un certificato SSL
   automatico da Render dopo la verifica del DNS.
 
+## URL leggibili degli articoli
+
+Ogni articolo è raggiungibile con un indirizzo che riprende il titolo, in
+stile Wikipedia, invece del generico `article.php?id=17`. Esempio:
+
+```
+https://actuality-jt1z.onrender.com/Disclosure_Day_(2026)_-_Non_siamo_soli
+```
+
+**Come funziona**: il file `.htaccess` nella radice del progetto reindirizza
+qualunque percorso che non corrisponda a un file/cartella reale verso
+`article.php?slug=...`. Gli articoli **creati da ora in poi** generano lo
+slug automaticamente dal titolo, senza bisogno di fare nulla.
+
+**L'URL resta stabile**: modificando il titolo di un articolo già
+pubblicato, l'indirizzo pubblico NON cambia (per non rompere eventuali link
+già condivisi sui social). Lo vedi comunque scritto nel form di modifica,
+sopra il campo Titolo.
+
+**I vecchi link `?id=17` continuano a funzionare** anche dopo questo
+aggiornamento: non si rompe nulla di quello che avevi già condiviso.
+
+### Se hai già articoli pubblicati prima di questo aggiornamento
+
+Gli articoli esistenti hanno ancora lo slug nel vecchio formato
+(`le-notizie-della-settimana`). Per aggiornarli tutti al nuovo formato
+leggibile in un colpo solo:
+
+```bash
+php tools/regenerate-slugs.php "https://il-tuo-db-tuaorg.turso.io" "il-tuo-token"
+```
+
+(per MySQL, lo stesso aggiornamento si può fare manualmente da phpMyAdmin,
+oppure chiedimi uno script equivalente se ti serve)
+
+### Nota per l'hosting condiviso (cPanel)
+
+Il file `.htaccess` richiede che l'hosting abbia `AllowOverride All`
+attivo — è il comportamento di default sulla stragrande maggioranza degli
+hosting condiviso italiani. Se le URL leggibili danno errore 404 su tutto,
+contatta il supporto del tuo hosting chiedendo di verificare questa
+impostazione per la tua cartella.
+
 ## Sicurezza inclusa
 
 - Password admin con hash bcrypt (`password_hash`/`password_verify`)

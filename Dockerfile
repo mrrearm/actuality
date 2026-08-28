@@ -11,6 +11,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && a2enmod rewrite \
     && rm -rf /var/lib/apt/lists/*
 
+# Abilita AllowOverride All: senza questo il file .htaccess (URL leggibili degli
+# articoli, protezioni delle cartelle sql/ e assets/uploads/) verrebbe ignorato
+RUN { \
+        echo '<Directory /var/www/html/>'; \
+        echo '    AllowOverride All'; \
+        echo '</Directory>'; \
+    } > /etc/apache2/conf-available/z-allow-override.conf \
+    && a2enconf z-allow-override
+
 WORKDIR /var/www/html
 COPY . /var/www/html/
 

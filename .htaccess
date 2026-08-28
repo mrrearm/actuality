@@ -1,0 +1,10 @@
+RewriteEngine On
+
+# Non toccare le richieste che corrispondono a file o cartelle realmente esistenti
+# (index.php, admin/, assets/, article.php, ecc. continuano a funzionare normalmente)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Un singolo segmento di percorso (senza barre) viene interpretato come lo slug di un articolo
+# Esempio: /Disclosure_Day_(2026)_-_Non_siamo_soli  ->  article.php?slug=Disclosure_Day_(2026)_-_Non_siamo_soli
+RewriteRule ^([^/]+)$ article.php?slug=$1 [L,QSA]

@@ -82,7 +82,7 @@ $flash = $_GET['flash'] ?? '';
             <td><?= date('d/m/Y', strtotime($art['published_at'])) ?></td>
             <td style="white-space:nowrap;">
               <a href="<?= url('admin/article-form.php?id=' . (int)$art['id']) ?>" class="btn btn-secondary btn-sm"><i class="fa-solid fa-pen"></i></a>
-              <a href="<?= url('article.php?id=' . (int)$art['id']) ?>" target="_blank" class="btn btn-secondary btn-sm"><i class="fa-solid fa-eye"></i></a>
+              <a href="<?= article_url($art) ?>" target="_blank" class="btn btn-secondary btn-sm"><i class="fa-solid fa-eye"></i></a>
               <form action="<?= url('admin/delete.php') ?>" method="post" style="display:inline;" onsubmit="return confirm('Eliminare definitivamente questo articolo?');">
                 <?= csrf_field() ?>
                 <input type="hidden" name="id" value="<?= (int)$art['id'] ?>">

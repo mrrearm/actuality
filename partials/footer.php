@@ -56,7 +56,7 @@ $subError   = isset($_GET['sub_error']);
         <h4>Ultime news</h4>
         <ul class="f-news">
           <?php foreach ($latest as $art): ?>
-            <li><a href="<?= url('article.php?id=' . (int)$art['id']) ?>"><?= h($art['title']) ?><span class="f-date"><?= h($art['cat_name']) ?></span></a></li>
+            <li><a href="<?= article_url($art) ?>"><?= h($art['title']) ?><span class="f-date"><?= h($art['cat_name']) ?></span></a></li>
           <?php endforeach; ?>
         </ul>
       </div>
