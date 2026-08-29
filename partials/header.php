@@ -29,6 +29,12 @@ $categories  = get_categories($pdo);
 </header>
 
 <div class="wrap">
+  <form class="search-bar" action="<?= url('search.php') ?>" method="get">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input type="text" name="q" placeholder="Cerca un articolo..." value="<?= h($_GET['q'] ?? '') ?>" maxlength="100">
+    <button type="submit">Cerca</button>
+  </form>
+
   <nav class="cat-nav">
     <?php foreach ($categories as $cat): ?>
       <div class="cat-pill" data-cat="<?= h($cat['slug']) ?>" onclick="filterCategory('<?= h($cat['slug']) ?>')"

@@ -56,6 +56,32 @@ function count_articles($pdo, ?string $catSlug = null, bool $onlyPublished = tru
     return (int)$stmt->fetchColumn();
 }
 
+/** Cerca negli articoli pubblicati (titolo, riassunto, contenuto) */
+function search_articles($pdo, string $query, bool $onlyPublished = true, ?int $limit = null, ?int $offset = null): array {
+    $sql = 'SELECT a.*, c.slug AS cat_slug, c.name AS cat_name, c.color_hex, c.icon_class
+            FROM articles a JOIN categories c ON a.category_id = c.id
+            WHERE (a.title LIKE ? OR a.excerpt LIKE ? OR a.content LIKE ?)';
+    $params = ["%$query%", "%$query%", "%$query%"];
+    if ($onlyPublished) { $sql .= " AND a.status = 'published'"; }
+    $sql .= ' ORDER BY a.published_at DESC, a.id DESC';
+    if ($limit !== null) {
+        $sql .= ' LIMIT ' . (int)$limit;
+        if ($offset !== null) { $sql .= ' OFFSET ' . (int)$offset; }
+    }
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll();
+}
+
+function count_search_articles($pdo, string $query, bool $onlyPublished = true): int {
+    $sql = 'SELECT COUNT(*) FROM articles a WHERE (a.title LIKE ? OR a.excerpt LIKE ? OR a.content LIKE ?)';
+    $params = ["%$query%", "%$query%", "%$query%"];
+    if ($onlyPublished) { $sql .= " AND a.status = 'published'"; }
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    return (int)$stmt->fetchColumn();
+}
+
 /** Tutte le categorie associate a un gruppo di articoli, in UNA sola query (evita N query separate) */
 function get_categories_for_articles($pdo, array $articleIds): array {
     if (!$articleIds) { return []; }

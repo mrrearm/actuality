@@ -31,14 +31,21 @@ $subError   = isset($_GET['sub_error']);
         <h2><?= h(get_setting($pdo, 'site_title', 'Scopri. Racconta. Sogna.')) ?></h2>
         <p><?= h($footerBio) ?></p>
         <a href="<?= url('index.php') ?>" class="f-cta">Scopri di più</a>
+
+        <form class="f-search" action="<?= url('search.php') ?>" method="get">
+          <input type="text" name="q" placeholder="Cerca un articolo...">
+          <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </form>
       </div>
 
       <div>
         <h4>Menu</h4>
         <ul>
           <li><a href="<?= url('index.php') ?>">Home</a></li>
+          <li><a href="<?= url('search.php') ?>">Cerca</a></li>
           <li><a href="<?= url('index.php') ?>#grid">Categorie</a></li>
           <li><a href="<?= url('index.php') ?>#grid">Archivio</a></li>
+          <li><a href="<?= url('privacy.php') ?>">Privacy Policy</a></li>
           <li><a href="mailto:info@mrrearm.it">Contatti</a></li>
         </ul>
       </div>
@@ -98,7 +105,7 @@ $subError   = isset($_GET['sub_error']);
       <?php endforeach; ?>
     </div>
 
-    <div class="f-bottom">&copy; <?= date('Y') ?> <?= h(get_setting($pdo, 'site_title', 'Scopri. Racconta. Sogna.')) ?> — Tutti i diritti riservati &nbsp;·&nbsp; <a href="<?= url('admin/login.php') ?>" style="color:#7c8ba0">Area Riservata</a></div>
+    <div class="f-bottom">&copy; <?= date('Y') ?> <?= h(get_setting($pdo, 'site_title', 'Scopri. Racconta. Sogna.')) ?> — Tutti i diritti riservati &nbsp;·&nbsp; <a href="<?= url('privacy.php') ?>" style="color:#7c8ba0">Privacy Policy</a> &nbsp;·&nbsp; <a href="<?= url('admin/login.php') ?>" style="color:#7c8ba0">Area Riservata</a></div>
   </div>
 </footer>
 
