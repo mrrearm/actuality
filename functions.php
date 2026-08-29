@@ -309,3 +309,55 @@ function upsert_setting($pdo, string $key, string $value): void {
     }
     $pdo->prepare($sql)->execute([$key, $value]);
 }
+
+function absolute_url(string $path): string {
+    $forwardedProto = strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '');
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $forwardedProto === 'https';
+    $scheme = $isHttps ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? '';
+    return $scheme . '://' . $host . $path;
+}
+
+function send_email(string $toEmail, string $toName, string $subject, string $htmlBody): bool {
+    if (!EMAIL_ENABLED) {
+        return false;
+    }
+    require_once __DIR__ . '/mail/SmtpMailer.php';
+    try {
+        $mailer = new SmtpMailer(SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_SECURE, SMTP_FROM_EMAIL, SMTP_FROM_NAME);
+        $mailer->send($toEmail, $toName, $subject, $htmlBody);
+        return true;
+    } catch (Throwable $e) {
+        error_log('Invio email fallito verso ' . $toEmail . ': ' . $e->getMessage());
+        return false;
+    }
+}
+
+function get_all_subscribers($pdo): array {
+    return $pdo->query('SELECT email FROM subscribers')->fetchAll();
+}
+
+function notify_subscribers_new_article($pdo, int $articleId): void {
+    $article = get_article($pdo, $articleId);
+    if (!$article) { return; }
+
+    $subscribers = get_all_subscribers($pdo);
+    if (!$subscribers) { return; }
+
+    $siteTitle = get_setting($pdo, 'site_title', 'Scopri. Racconta. Sogna.');
+    $link = absolute_url(article_url($article));
+    $rawExcerpt = $article['excerpt'] ?: strip_tags($article['content']);
+    $excerpt = function_exists('mb_substr') ? mb_substr($rawExcerpt, 0, 160) : substr($rawExcerpt, 0, 160);
+
+    $html = '<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">'
+          . '<p style="color:#888;font-size:12px;text-transform:uppercase;letter-spacing:1px;">' . h($siteTitle) . '</p>'
+          . '<h2 style="color:#1c2430;">' . h($article['title']) . '</h2>'
+          . '<p style="color:#5b6472;line-height:1.6;">' . h($excerpt) . '</p>'
+          . '<p><a href="' . h($link) . '" style="display:inline-block;background:#1f8a94;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:bold;">Leggi articolo</a></p>'
+          . '<p style="color:#aaa;font-size:12px;margin-top:30px;">Ricevi questa email perche sei iscritto alla newsletter di ' . h($siteTitle) . '. Per cancellarti scrivi a info@mrrearm.it.</p>'
+          . '</div>';
+
+    foreach ($subscribers as $sub) {
+        send_email($sub['email'], $sub['email'], 'Nuovo articolo: ' . $article['title'], $html);
+    }
+}

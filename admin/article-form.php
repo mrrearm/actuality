@@ -50,9 +50,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($isEdit) {
                 // Lo slug NON viene rigenerato in modifica: l'URL pubblico già condiviso resta stabile
+                $wasPublishedBefore = $article['status'] === 'published';
                 $stmt = $pdo->prepare('UPDATE articles SET category_id=?, title=?, excerpt=?, content=?, image_url=?, status=? WHERE id=?');
                 $stmt->execute([$categoryId, $title, $excerpt, $content, $finalImage, $status, $id]);
                 sync_article_categories($pdo, $id, $allCategoryIds);
+
+                // Notifica gli iscritti SOLO quando l'articolo passa da bozza a pubblicato,
+                // mai per le modifiche successive (altrimenti si spammerebbero gli iscritti ad ogni salvataggio)
+                if (!$wasPublishedBefore && $status === 'published') {
+                    notify_subscribers_new_article($pdo, $id);
+                }
                 header('Location: ' . url('admin/dashboard.php?flash=updated'));
                 exit;
             } else {
@@ -70,6 +77,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$categoryId, $title, $slug, $excerpt, $content, $finalImage, $status]);
                 $newId = (int)$pdo->lastInsertId();
                 sync_article_categories($pdo, $newId, $allCategoryIds);
+
+                if ($status === 'published') {
+                    notify_subscribers_new_article($pdo, $newId);
+                }
                 header('Location: ' . url('admin/dashboard.php?flash=created'));
                 exit;
             }

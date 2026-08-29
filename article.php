@@ -31,10 +31,7 @@ $comments = get_comments($pdo, $id, true);
 
 $hasVoted = isset($_COOKIE['voted_articles']) && in_array((string)$id, explode(',', $_COOKIE['voted_articles']), true);
 
-$forwardedProto = strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '');
-$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $forwardedProto === 'https';
-$scheme = $isHttps ? 'https' : 'http';
-$currentUrl = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? '') . article_url($article);
+$currentUrl = absolute_url(article_url($article));
 $shareTitle = rawurlencode($article['title']);
 $shareUrl = rawurlencode($currentUrl);
 

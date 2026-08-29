@@ -249,6 +249,58 @@ hosting condiviso italiani. Se le URL leggibili danno errore 404 su tutto,
 contatta il supporto del tuo hosting chiedendo di verificare questa
 impostazione per la tua cartella.
 
+## Newsletter via email (mail di conferma + notifica nuovi articoli)
+
+Il sito raccoglie sempre gli indirizzi email degli iscritti nella tabella
+`subscribers`, indipendentemente da questa configurazione. Per far partire
+le email vere e proprie (conferma iscrizione + notifica quando pubblichi un
+articolo) serve un account SMTP — il progetto non ha bisogno di librerie
+esterne, parla il protocollo SMTP direttamente.
+
+**Cosa succede se non configuri nulla**: il sito continua a funzionare
+normalmente, gli iscritti vengono comunque salvati nel database, semplicemente
+non parte nessuna email. Nessun errore visibile per l'utente.
+
+### Come attivarlo
+
+1. **Scegli un provider SMTP**. Alcuni con piano gratuito adatto a un blog
+   personale: Brevo (ex Sendinblue, 300 email/giorno gratis), Gmail (con una
+   "password per le app", non quella normale del tuo account), Mailgun,
+   Resend. Ti servono: host SMTP, porta, username, password.
+
+2. **Imposta queste variabili** (in `config.php` su hosting condiviso,
+   oppure come variabili d'ambiente su Render — stesso meccanismo già usato
+   per `DB_DRIVER` e le credenziali Turso):
+
+   ```
+   EMAIL_ENABLED = true
+   SMTP_HOST = smtp-relay.brevo.com        (esempio, dipende dal provider)
+   SMTP_PORT = 587
+   SMTP_USER = il-tuo-username-smtp
+   SMTP_PASS = la-tua-password-smtp
+   SMTP_SECURE = tls                        (usa 'ssl' se il provider richiede la porta 465)
+   SMTP_FROM_EMAIL = no-reply@mrrearm.it
+   SMTP_FROM_NAME = Scopri. Racconta. Sogna.
+   ```
+
+3. Riavvia/redeploy il sito perché le nuove variabili vengano lette.
+
+### Quando partono le email
+
+- **Mail di conferma**: subito dopo che qualcuno si iscrive dal footer.
+- **Notifica nuovo articolo**: quando pubblichi un articolo nuovo, oppure
+  quando porti un articolo da "Bozza" a "Pubblicato" modificandolo. **Non**
+  riparte per le modifiche successive a un articolo già pubblicato, per non
+  spammare gli iscritti ad ogni piccola correzione.
+
+### Un limite da conoscere
+
+Le email vengono inviate una per una, in sequenza, nello stesso momento in
+cui pubblichi l'articolo — per poche decine/centinaia di iscritti va benissimo,
+ma se la lista dovesse crescere molto (migliaia di iscritti) la pubblicazione
+di un articolo diventerebbe lenta. In quel caso servirebbe un sistema di coda
+(invio in background), che possiamo costruire più avanti se necessario.
+
 ## Sicurezza inclusa
 
 - Password admin con hash bcrypt (`password_hash`/`password_verify`)

@@ -38,6 +38,18 @@ define('TURSO_AUTH_TOKEN', env('TURSO_AUTH_TOKEN', 'INSERISCI_IL_TUO_TOKEN'));
 // Render/Docker, dove il progetto vive alla radice del proprio dominio: '' (vuoto)
 define('BASE_PATH', env('BASE_PATH', '/actuality'));
 
+// ---- EMAIL (newsletter: conferma iscrizione + notifica nuovi articoli) ----
+// Disabilitato di default: finché non imposti queste variabili, il sito
+// continua a funzionare normalmente ma non tenta di inviare nessuna email.
+define('EMAIL_ENABLED', env('EMAIL_ENABLED', 'false') === 'true');
+define('SMTP_HOST', env('SMTP_HOST', ''));
+define('SMTP_PORT', (int)env('SMTP_PORT', '587'));
+define('SMTP_USER', env('SMTP_USER', ''));
+define('SMTP_PASS', env('SMTP_PASS', ''));
+define('SMTP_SECURE', env('SMTP_SECURE', 'tls'));   // 'tls' (porta 587) oppure 'ssl' (porta 465)
+define('SMTP_FROM_EMAIL', env('SMTP_FROM_EMAIL', 'no-reply@example.com'));
+define('SMTP_FROM_NAME', env('SMTP_FROM_NAME', 'Scopri. Racconta. Sogna.'));
+
 // ---- SESSIONE ----
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
