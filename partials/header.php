@@ -29,18 +29,20 @@ $categories  = get_categories($pdo);
 </header>
 
 <div class="wrap">
-  <form class="search-bar" action="<?= url('search.php') ?>" method="get">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <input type="text" name="q" placeholder="Cerca un articolo..." value="<?= h($_GET['q'] ?? '') ?>" maxlength="100">
-    <button type="submit">Cerca</button>
-  </form>
+  <div class="hero-panel">
+    <form class="search-bar" action="<?= url('search.php') ?>" method="get">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" name="q" placeholder="Cerca un articolo..." value="<?= h($_GET['q'] ?? '') ?>" maxlength="100">
+      <button type="submit">Cerca</button>
+    </form>
 
-  <nav class="cat-nav">
-    <?php foreach ($categories as $cat): ?>
-      <div class="cat-pill" data-cat="<?= h($cat['slug']) ?>" onclick="filterCategory('<?= h($cat['slug']) ?>')"
-           style="color:<?= h($cat['color_hex']) ?>; background:<?= h($cat['color_hex']) ?>1a;">
-        <i class="<?= h($cat['icon_class']) ?>"></i> <?= upper(h($cat['name'])) ?>
-      </div>
-    <?php endforeach; ?>
-  </nav>
+    <nav class="cat-nav">
+      <?php foreach ($categories as $cat): ?>
+        <div class="cat-pill" data-cat="<?= h($cat['slug']) ?>" onclick="filterCategory('<?= h($cat['slug']) ?>')"
+             style="color:<?= h($cat['color_hex']) ?>; background:<?= h($cat['color_hex']) ?>1a;">
+          <i class="<?= h($cat['icon_class']) ?>"></i> <?= upper(h($cat['name'])) ?>
+        </div>
+      <?php endforeach; ?>
+    </nav>
+  </div>
 </div>
