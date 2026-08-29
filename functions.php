@@ -322,9 +322,14 @@ function send_email(string $toEmail, string $toName, string $subject, string $ht
     if (!EMAIL_ENABLED) {
         return false;
     }
-    require_once __DIR__ . '/mail/SmtpMailer.php';
     try {
-        $mailer = new SmtpMailer(SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_SECURE, SMTP_FROM_EMAIL, SMTP_FROM_NAME);
+        if (EMAIL_DRIVER === 'brevo_api') {
+            require_once __DIR__ . '/mail/BrevoApiMailer.php';
+            $mailer = new BrevoApiMailer(BREVO_API_KEY, SMTP_FROM_EMAIL, SMTP_FROM_NAME);
+        } else {
+            require_once __DIR__ . '/mail/SmtpMailer.php';
+            $mailer = new SmtpMailer(SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_SECURE, SMTP_FROM_EMAIL, SMTP_FROM_NAME);
+        }
         $mailer->send($toEmail, $toName, $subject, $htmlBody);
         return true;
     } catch (Throwable $e) {

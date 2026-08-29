@@ -261,7 +261,35 @@ esterne, parla il protocollo SMTP direttamente.
 normalmente, gli iscritti vengono comunque salvati nel database, semplicemente
 non parte nessuna email. Nessun errore visibile per l'utente.
 
-### Come attivarlo
+### ⚠️ Se sei su Render: usa l'API HTTP, non SMTP
+
+Dal 2025 Render blocca tutte le porte SMTP (25, 465, 587) in uscita sui
+servizi con piano gratuito, per prevenire spam. Nessuna configurazione SMTP
+può funzionare in queste condizioni — non è un problema del codice o delle
+credenziali, è un blocco a livello di rete della piattaforma.
+
+Per questo il progetto supporta anche l'**API HTTP di Brevo** (porta 443,
+mai bloccata), che dal punto di vista di Render è indistinguibile da una
+normale richiesta a un sito web.
+
+**Su Render**, oltre alle variabili già viste, imposta anche:
+```
+EMAIL_DRIVER = brevo_api
+BREVO_API_KEY = la-tua-api-key-di-brevo
+```
+
+L'API key si trova in un punto diverso rispetto alla chiave SMTP: Brevo →
+**Settings** → **SMTP & API** → scheda **API Keys** (non la scheda SMTP) →
+**Generate a new API key**. Le variabili `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/
+`SMTP_PASS`/`SMTP_SECURE` non servono più con questo driver — restano solo
+`SMTP_FROM_EMAIL` e `SMTP_FROM_NAME`, usate anche dall'API per intestare le
+email.
+
+**Su hosting condiviso classico** (cPanel), invece, SMTP funziona
+normalmente senza questa restrizione: lascia `EMAIL_DRIVER=smtp` (il
+default) e segui la procedura sotto.
+
+### Come attivarlo (hosting condiviso con SMTP)
 
 1. **Scegli un provider SMTP**. Alcuni con piano gratuito adatto a un blog
    personale: Brevo (ex Sendinblue, 300 email/giorno gratis), Gmail (con una

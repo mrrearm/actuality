@@ -42,6 +42,13 @@ define('BASE_PATH', env('BASE_PATH', '/actuality'));
 // Disabilitato di default: finché non imposti queste variabili, il sito
 // continua a funzionare normalmente ma non tenta di inviare nessuna email.
 define('EMAIL_ENABLED', env('EMAIL_ENABLED', 'false') === 'true');
+
+// EMAIL_DRIVER: 'smtp' (hosting condiviso classico) oppure 'brevo_api'
+// (necessario su Render: dal 2025 blocca le porte SMTP in uscita sul piano
+// gratuito, ma le richieste HTTPS come questa funzionano senza problemi)
+define('EMAIL_DRIVER', env('EMAIL_DRIVER', 'smtp'));
+define('BREVO_API_KEY', env('BREVO_API_KEY', ''));
+
 define('SMTP_HOST', env('SMTP_HOST', ''));
 define('SMTP_PORT', (int)env('SMTP_PORT', '587'));
 define('SMTP_USER', env('SMTP_USER', ''));
