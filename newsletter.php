@@ -18,7 +18,7 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 try {
     $stmt = $pdo->prepare('INSERT INTO subscribers (email) VALUES (?)');
     $stmt->execute([$email]);
-} catch (PDOException $e) {
+} catch (Throwable $e) {
     // email già iscritta (UNIQUE) o altro errore: non blocchiamo l'utente
     header('Location: ' . url('index.php?sub_error=1#grid'));
     exit;
