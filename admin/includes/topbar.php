@@ -2,7 +2,13 @@
 /** admin/includes/topbar.php — richiede url() e $activePage impostato dalla pagina chiamante */
 $activePage = $activePage ?? '';
 $pendingComments = count_comments_by_status($pdo, 'pending');
-$totalMessages = (int)$pdo->query('SELECT COUNT(*) FROM contact_messages')->fetchColumn();
+try {
+    $totalMessages = (int)$pdo->query('SELECT COUNT(*) FROM contact_messages')->fetchColumn();
+} catch (Throwable $e) {
+    // La tabella potrebbe non esistere ancora se la migrazione non è stata
+    // eseguita: meglio mostrare 0 che far crashare tutta la dashboard
+    $totalMessages = 0;
+}
 ?>
 <div class="admin-topbar">
   <div class="brand"><i class="fa-solid fa-gauge"></i> Dashboard — <?= h(get_setting($pdo, 'site_title', 'Scopri. Racconta. Sogna.')) ?></div>
