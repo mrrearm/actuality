@@ -25,7 +25,7 @@ class SmtpMailer
         private string $fromName
     ) {}
 
-    public function send(string $toEmail, string $toName, string $subject, string $htmlBody): void
+    public function send(string $toEmail, string $toName, string $subject, string $htmlBody, ?string $replyTo = null): void
     {
         $transport = $this->secure === 'ssl' ? 'ssl://' : '';
         $socket = @stream_socket_client(
@@ -66,12 +66,22 @@ class SmtpMailer
             'Content-Transfer-Encoding: 8bit',
             'Date: ' . date('r'),
         ];
+        if ($replyTo) {
+            $headers[] = 'Reply-To: ' . $this->sanitizeHeaderValue($replyTo);
+        }
 
         $message = implode("\r\n", $headers) . "\r\n\r\n" . $this->stuffDots($htmlBody) . "\r\n.";
         $this->command($socket, $message, 250);
 
         $this->command($socket, 'QUIT', 221);
         fclose($socket);
+    }
+
+    /** Toglie ritorni a capo da un valore che finirà in un header: previene
+     *  l'header injection (es. qualcuno che tenta di aggiungere un Bcc: finto) */
+    private function sanitizeHeaderValue(string $value): string
+    {
+        return trim(str_replace(["\r", "\n"], '', $value));
     }
 
     private function heloDomain(): string

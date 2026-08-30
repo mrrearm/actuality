@@ -16,9 +16,9 @@ class BrevoApiMailer
         private string $fromName
     ) {}
 
-    public function send(string $toEmail, string $toName, string $subject, string $htmlBody): void
+    public function send(string $toEmail, string $toName, string $subject, string $htmlBody, ?string $replyTo = null): void
     {
-        $payload = $this->buildPayload($toEmail, $toName, $subject, $htmlBody);
+        $payload = $this->buildPayload($toEmail, $toName, $subject, $htmlBody, $replyTo);
 
         $ch = curl_init('https://api.brevo.com/v3/smtp/email');
         curl_setopt_array($ch, [
@@ -48,13 +48,17 @@ class BrevoApiMailer
     }
 
     /** Pubblico apposta: permette di testare il payload senza fare una vera chiamata HTTP */
-    public function buildPayload(string $toEmail, string $toName, string $subject, string $htmlBody): array
+    public function buildPayload(string $toEmail, string $toName, string $subject, string $htmlBody, ?string $replyTo = null): array
     {
-        return [
+        $payload = [
             'sender'      => ['name' => $this->fromName, 'email' => $this->fromEmail],
             'to'          => [['email' => $toEmail, 'name' => $toName]],
             'subject'     => $subject,
             'htmlContent' => $htmlBody,
         ];
+        if ($replyTo) {
+            $payload['replyTo'] = ['email' => $replyTo];
+        }
+        return $payload;
     }
 }

@@ -46,7 +46,7 @@ $subError   = isset($_GET['sub_error']);
           <li><a href="<?= url('index.php') ?>#grid">Categorie</a></li>
           <li><a href="<?= url('index.php') ?>#grid">Archivio</a></li>
           <li><a href="<?= url('privacy.php') ?>">Privacy Policy</a></li>
-          <li><a href="mailto:info@mrrearm.it">Contatti</a></li>
+          <li><a href="<?= url('contact.php') ?>">Contatti</a></li>
         </ul>
       </div>
 

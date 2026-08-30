@@ -318,7 +318,7 @@ function absolute_url(string $path): string {
     return $scheme . '://' . $host . $path;
 }
 
-function send_email(string $toEmail, string $toName, string $subject, string $htmlBody): bool {
+function send_email(string $toEmail, string $toName, string $subject, string $htmlBody, ?string $replyTo = null): bool {
     if (!EMAIL_ENABLED) {
         return false;
     }
@@ -330,7 +330,7 @@ function send_email(string $toEmail, string $toName, string $subject, string $ht
             require_once __DIR__ . '/mail/SmtpMailer.php';
             $mailer = new SmtpMailer(SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_SECURE, SMTP_FROM_EMAIL, SMTP_FROM_NAME);
         }
-        $mailer->send($toEmail, $toName, $subject, $htmlBody);
+        $mailer->send($toEmail, $toName, $subject, $htmlBody, $replyTo);
         return true;
     } catch (Throwable $e) {
         error_log('Invio email fallito verso ' . $toEmail . ': ' . $e->getMessage());
