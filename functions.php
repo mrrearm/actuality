@@ -354,15 +354,42 @@ function notify_subscribers_new_article($pdo, int $articleId): void {
     $rawExcerpt = $article['excerpt'] ?: strip_tags($article['content']);
     $excerpt = function_exists('mb_substr') ? mb_substr($rawExcerpt, 0, 160) : substr($rawExcerpt, 0, 160);
 
-    $html = '<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">'
-          . '<p style="color:#888;font-size:12px;text-transform:uppercase;letter-spacing:1px;">' . h($siteTitle) . '</p>'
-          . '<h2 style="color:#1c2430;">' . h($article['title']) . '</h2>'
-          . '<p style="color:#5b6472;line-height:1.6;">' . h($excerpt) . '</p>'
-          . '<p><a href="' . h($link) . '" style="display:inline-block;background:#1f8a94;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:bold;">Leggi articolo</a></p>'
-          . '<p style="color:#aaa;font-size:12px;margin-top:30px;">Ricevi questa email perche sei iscritto alla newsletter di ' . h($siteTitle) . '. Per cancellarti scrivi a info@mrrearm.it.</p>'
-          . '</div>';
-
     foreach ($subscribers as $sub) {
-        send_email($sub['email'], $sub['email'], 'Nuovo articolo: ' . $article['title'], $html);
+        try {
+            $unsubLink = get_unsubscribe_link($pdo, $sub['email']);
+            $html = '<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">'
+                  . '<p style="color:#888;font-size:12px;text-transform:uppercase;letter-spacing:1px;">' . h($siteTitle) . '</p>'
+                  . '<h2 style="color:#1c2430;">' . h($article['title']) . '</h2>'
+                  . '<p style="color:#5b6472;line-height:1.6;">' . h($excerpt) . '</p>'
+                  . '<p><a href="' . h($link) . '" style="display:inline-block;background:#1f8a94;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:bold;">Leggi articolo</a></p>'
+                  . '<p style="color:#aaa;font-size:12px;margin-top:30px;">Ricevi questa email perche sei iscritto alla newsletter di ' . h($siteTitle) . '. <a href="' . h($unsubLink) . '" style="color:#aaa;">Cancellati dalla newsletter</a>.</p>'
+                  . '</div>';
+            send_email($sub['email'], $sub['email'], 'Nuovo articolo: ' . $article['title'], $html);
+        } catch (Throwable $e) {
+            error_log('Impossibile notificare ' . $sub['email'] . ' del nuovo articolo: ' . $e->getMessage());
+        }
     }
+}
+
+/** Chiave segreta usata per firmare i link di disiscrizione. Viene generata
+ *  automaticamente al primo utilizzo e salvata nel database — nessuna
+ *  configurazione manuale richiesta. */
+function get_app_secret($pdo): string {
+    $secret = get_setting($pdo, 'app_secret', '');
+    if ($secret === '') {
+        $secret = bin2hex(random_bytes(32));
+        upsert_setting($pdo, 'app_secret', $secret);
+    }
+    return $secret;
+}
+
+/** Token firmato per un indirizzo email: impedisce che qualcuno possa
+ *  disiscrivere un'altra persona indovinandone semplicemente l'email */
+function unsubscribe_token($pdo, string $email): string {
+    return hash_hmac('sha256', strtolower(trim($email)), get_app_secret($pdo));
+}
+
+function get_unsubscribe_link($pdo, string $email): string {
+    $token = unsubscribe_token($pdo, $email);
+    return absolute_url(url('unsubscribe.php?' . http_build_query(['email' => $email, 'token' => $token])));
 }
