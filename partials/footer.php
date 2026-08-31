@@ -30,7 +30,7 @@ $subError   = isset($_GET['sub_error']);
       <div class="f-brand">
         <h2><?= h(get_setting($pdo, 'site_title', 'Scopri. Racconta. Sogna.')) ?></h2>
         <p><?= h($footerBio) ?></p>
-        <a href="<?= url('index.php') ?>" class="f-cta">Scopri di più</a>
+        <a href="<?= url('scopri.php') ?>" class="f-cta">Scopri di più</a>
 
         <form class="f-search" action="<?= url('search.php') ?>" method="get">
           <input type="text" name="q" placeholder="Cerca un articolo...">
@@ -43,7 +43,7 @@ $subError   = isset($_GET['sub_error']);
         <ul>
           <li><a href="<?= url('index.php') ?>">Home</a></li>
           <li><a href="<?= url('search.php') ?>">Cerca</a></li>
-          <li><a href="<?= url('index.php') ?>#grid">Categorie</a></li>
+          <li><a href="<?= url('index.php') ?>#categories">Categorie</a></li>
           <li><a href="<?= url('index.php') ?>#grid">Archivio</a></li>
           <li><a href="<?= url('privacy.php') ?>">Privacy Policy</a></li>
           <li><a href="<?= url('contact.php') ?>">Contatti</a></li>

@@ -29,7 +29,7 @@ $categories  = get_categories($pdo);
 </header>
 
 <div class="wrap">
-  <div class="hero-panel">
+  <div class="hero-panel" id="categories">
     <form class="search-bar" action="<?= url('search.php') ?>" method="get">
       <i class="fa-solid fa-magnifying-glass"></i>
       <input type="text" name="q" placeholder="Cerca un articolo..." value="<?= h($_GET['q'] ?? '') ?>" maxlength="100">
