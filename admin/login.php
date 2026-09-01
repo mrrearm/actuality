@@ -2,6 +2,12 @@
 require __DIR__ . '/../config.php';
 require __DIR__ . '/../functions.php';
 
+// Impedisce a browser/proxy di tenere in cache questa pagina: altrimenti, tornando
+// indietro o riaprendola, si rischia di vedere un modulo con un token CSRF vecchio
+// che non corrisponde più a quello attuale in sessione ("CSRF token scaduto").
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+
 if (is_logged_in()) {
     header('Location: ' . url('admin/dashboard.php'));
     exit;
