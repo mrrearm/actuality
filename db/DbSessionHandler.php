@@ -47,14 +47,25 @@ class DbSessionHandler implements SessionHandlerInterface {
 
     public function write($id, $data): bool {
         $now = time();
-        $exists = $this->pdo->prepare('SELECT 1 FROM sessions WHERE id = ?');
-        $exists->execute([$id]);
-        if ($exists->fetch()) {
-            $stmt = $this->pdo->prepare('UPDATE sessions SET data = ?, last_activity = ? WHERE id = ?');
-            return $stmt->execute([$data, $now, $id]);
+        // Upsert in un'unica query invece di "SELECT per controllare, poi INSERT o UPDATE":
+        // quella versione faceva due chiamate di rete separate verso Turso, ed è proprio lì
+        // che un intoppo di rete occasionale poteva far "perdere" il salvataggio della sessione.
+        if (DB_DRIVER === 'turso') {
+            // Sintassi SQLite/libSQL
+            $sql = 'INSERT INTO sessions (id, data, last_activity) VALUES (?, ?, ?)
+                    ON CONFLICT(id) DO UPDATE SET data = excluded.data, last_activity = excluded.last_activity';
+        } else {
+            // Sintassi MySQL
+            $sql = 'INSERT INTO sessions (id, data, last_activity) VALUES (?, ?, ?)
+                    ON DUPLICATE KEY UPDATE data = VALUES(data), last_activity = VALUES(last_activity)';
         }
-        $stmt = $this->pdo->prepare('INSERT INTO sessions (id, data, last_activity) VALUES (?, ?, ?)');
-        return $stmt->execute([$id, $data, $now]);
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            return $stmt->execute([$id, $data, $now]);
+        } catch (Throwable $e) {
+            error_log('Salvataggio sessione fallito per ' . $id . ': ' . $e->getMessage());
+            return false;
+        }
     }
 
     public function destroy($id): bool {
