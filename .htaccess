@@ -1,5 +1,10 @@
 RewriteEngine On
 
+# Redirect permanente dal dominio Render (*.onrender.com) al dominio definitivo,
+# per evitare contenuti duplicati e la schermata di "risveglio" di Render
+RewriteCond %{HTTP_HOST} \.onrender\.com$ [NC]
+RewriteRule ^(.*)$ https://magazine.mrrearm.it/$1 [R=301,L,QSA]
+
 # Non toccare le richieste che corrispondono a file o cartelle realmente esistenti
 # (index.php, admin/, assets/, article.php, ecc. continuano a funzionare normalmente)
 RewriteCond %{REQUEST_FILENAME} !-f
