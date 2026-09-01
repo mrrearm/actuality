@@ -57,11 +57,6 @@ define('SMTP_SECURE', env('SMTP_SECURE', 'tls'));   // 'tls' (porta 587) oppure 
 define('SMTP_FROM_EMAIL', env('SMTP_FROM_EMAIL', 'no-reply@example.com'));
 define('SMTP_FROM_NAME', env('SMTP_FROM_NAME', 'Scopri. Racconta. Sogna.'));
 
-// ---- SESSIONE ----
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 // ---- CONNESSIONE ----
 try {
     if (DB_DRIVER === 'turso') {
@@ -82,6 +77,16 @@ try {
 } catch (Throwable $e) {
     http_response_code(500);
     die('Errore di connessione al database. Controlla config.php / variabili d\'ambiente. (' . htmlspecialchars($e->getMessage()) . ')');
+}
+
+// ---- SESSIONE ----
+// Sessioni salvate nel database (non su disco locale): su Render il
+// filesystem del container è effimero e viene svuotato ad ogni riavvio,
+// il che invaliderebbe le sessioni (e quindi i token CSRF) salvate su file.
+if (session_status() === PHP_SESSION_NONE) {
+    require __DIR__ . '/db/DbSessionHandler.php';
+    session_set_save_handler(new DbSessionHandler($pdo), true);
+    session_start();
 }
 
 // ---- CSRF TOKEN ----
