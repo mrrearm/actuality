@@ -35,6 +35,13 @@ $currentUrl = absolute_url(article_url($article));
 $shareTitle = rawurlencode($article['title']);
 $shareUrl = rawurlencode($currentUrl);
 
+// Valori per i tag Open Graph/Twitter Card, letti da partials/header.php per l'anteprima di condivisione
+$rawExcerpt = $article['excerpt'] ?: strip_tags($article['content']);
+$ogTitle = $article['title'];
+$ogDescription = function_exists('mb_substr') ? mb_substr($rawExcerpt, 0, 160) : substr($rawExcerpt, 0, 160);
+$ogImage = $article['image_url'];
+$ogUrl = $currentUrl;
+
 require __DIR__ . '/partials/header.php';
 ?>
 
@@ -63,7 +70,7 @@ require __DIR__ . '/partials/header.php';
     <a href="https://www.facebook.com/sharer/sharer.php?u=<?= $shareUrl ?>" target="_blank" rel="noopener" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
     <a href="https://twitter.com/intent/tweet?url=<?= $shareUrl ?>&text=<?= $shareTitle ?>" target="_blank" rel="noopener" title="X"><i class="fa-brands fa-x-twitter"></i></a>
     <a href="https://api.whatsapp.com/send?text=<?= $shareTitle ?>%20<?= $shareUrl ?>" target="_blank" rel="noopener" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
-    <a href="https://t.me/share/url?url=<?= $shareUrl ?>&text=<?= $shareTitle ?>" target="_blank" rel="noopener" title="Telegram"><i class="fa-brands fa-telegram"></i></a>
+    <a href="https://t.me/share/url?text=<?= $shareTitle ?>&url=<?= $shareUrl ?>" target="_blank" rel="noopener" title="Telegram"><i class="fa-brands fa-telegram"></i></a>
     <button type="button" class="share-copy" onclick="copyArticleLink(this)" title="Copia link"><i class="fa-solid fa-link"></i></button>
   </div>
 
