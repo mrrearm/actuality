@@ -362,7 +362,7 @@ function notify_subscribers_new_article($pdo, int $articleId): void {
                   . '<h2 style="color:#1c2430;">' . h($article['title']) . '</h2>'
                   . '<p style="color:#5b6472;line-height:1.6;">' . h($excerpt) . '</p>'
                   . '<p><a href="' . h($link) . '" style="display:inline-block;background:#1f8a94;color:#fff;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:bold;">Leggi articolo</a></p>'
-                  . '<p style="color:#aaa;font-size:12px;margin-top:30px;">Ricevi questa email perche sei iscritto alla newsletter di ' . h($siteTitle) . '. <a href="' . h($unsubLink) . '" style="color:#aaa;">Cancellati dalla newsletter</a>.</p>'
+                  . '<p style="color:#aaa;font-size:12px;margin-top:30px;">Ricevi questa email perche sei iscritto alla newsletter di ' . h($siteTitle) . '. Vai a questo indirizzo per disiscriverti: ' . h($unsubLink) . '</p>'
                   . '</div>';
             send_email($sub['email'], $sub['email'], 'Nuovo articolo: ' . $article['title'], $html);
         } catch (Throwable $e) {

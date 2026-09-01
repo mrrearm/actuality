@@ -34,7 +34,7 @@ try {
     $html = '<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">'
           . '<h2 style="color:#1f8a94;">Iscrizione confermata!</h2>'
           . '<p style="color:#5b6472;line-height:1.6;">Grazie per esserti iscritto alla newsletter di <strong>' . h($siteTitle) . '</strong>. Da ora riceverai una email ogni volta che pubblico un nuovo articolo.</p>'
-          . '<p style="color:#aaa;font-size:12px;margin-top:30px;">Se non ti sei iscritto tu, o vuoi cancellarti, <a href="' . h($unsubLink) . '" style="color:#aaa;">clicca qui per disiscriverti</a>.</p>'
+          . '<p style="color:#aaa;font-size:12px;margin-top:30px;">Se non ti sei iscritto tu, o vuoi cancellarti, vai a questo indirizzo per disiscriverti: ' . h($unsubLink) . '</p>'
           . '</div>';
     send_email($email, $email, 'Iscrizione confermata — ' . $siteTitle, $html);
 } catch (Throwable $e) {
