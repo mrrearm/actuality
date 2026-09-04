@@ -1,15 +1,8 @@
 RewriteEngine On
 
-# Redirect permanente dal dominio Render (*.onrender.com) al dominio definitivo,
-# per evitare contenuti duplicati e la schermata di "risveglio" di Render
-RewriteCond %{HTTP_HOST} \.onrender\.com$ [NC]
-RewriteRule ^(.*)$ https://magazine.mrrearm.it/$1 [R=301,L,QSA]
-
-# Non toccare le richieste che corrispondono a file o cartelle realmente esistenti
-# (index.php, admin/, assets/, article.php, ecc. continuano a funzionare normalmente)
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-
-# Un singolo segmento di percorso (senza barre) viene interpretato come lo slug di un articolo
-# Esempio: /Disclosure_Day_(2026)_-_Non_siamo_soli  ->  article.php?slug=Disclosure_Day_(2026)_-_Non_siamo_soli
-RewriteRule ^([^/]+)$ article.php?slug=$1 [L,QSA]
+# Il progetto ora vive su mrrearm.it/magazine. Questo deploy su Render resta
+# attivo solo come "ponte": chiunque arrivi qui (dal vecchio indirizzo
+# actuality-jt1z.onrender.com, o dal vecchio sottodominio magazine.mrrearm.it
+# se il DNS punta ancora qui) viene rediretto in modo permanente al nuovo
+# indirizzo definitivo, mantenendo lo stesso percorso e parametri.
+RewriteRule ^(.*)$ https://mrrearm.it/magazine/$1 [R=301,L,QSA]
